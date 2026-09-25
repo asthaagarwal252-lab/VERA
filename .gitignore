@@ -8,4 +8,7 @@ __pycache__/
 *.pyc
 .superdesign/tmp/
 backend/vera.db
-
+backend/test_vera.db
+test_vera.db
+test_vera_v2.db
+backend/*.egg-info/
