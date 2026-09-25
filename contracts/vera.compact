@@ -1,0 +1,52 @@
+// VERA eligibility registry — Compact source.
+// `disclose(eligible)` is intentional: a verifier needs only the yes/no outcome.
+// The DOB, student number, issuer signature, and secret nonce remain a private witness.
+pragma language_version >= 0.18;
+
+contract VERAEligibility {
+  // Public ledger state: issuers, used nullifiers, and aggregate verification count.
+  ledger issuers: Map<Bytes<32>, Boolean>;
+  ledger used_nullifiers: Map<Bytes<32>, Boolean>;
+  ledger verified_count: Counter;
+
+  // Registers an authority public key. This does not contain a student credential.
+  circuit register_issuer(issuer_key: Bytes<32>): [] {
+    assert(!issuers.member(issuer_key));
+    issuers.insert(issuer_key, true);
+  }
+
+  // Private witness values are never disclosed. Only a boolean outcome is public.
+  circuit prove_eligibility(
+    private credential_commitment: Bytes<32>,
+    private issuer_key: Bytes<32>,
+    private birth_year: Uint<16>,
+    private current_year: Uint<16>,
+    private secret_nonce: Bytes<32>,
+    verifier_scope: Bytes<32>
+  ): Boolean {
+    assert(issuers.member(issuer_key));
+    assert(current_year >= birth_year + 18);
+    let nullifier = poseidon(credential_commitment, secret_nonce, verifier_scope);
+    assert(!used_nullifiers.member(nullifier));
+    used_nullifiers.insert(nullifier, true);
+    verified_count.increment(1);
+    let eligible = true;
+    return disclose(eligible);
+  }
+
+  // A separate circuit for an enrolled-only policy; same privacy-safe replay defense.
+  circuit prove_enrollment(
+    private enrollment_commitment: Bytes<32>,
+    private issuer_key: Bytes<32>,
+    private secret_nonce: Bytes<32>,
+    verifier_scope: Bytes<32>
+  ): Boolean {
+    assert(issuers.member(issuer_key));
+    let nullifier = poseidon(enrollment_commitment, secret_nonce, verifier_scope);
+    assert(!used_nullifiers.member(nullifier));
+    used_nullifiers.insert(nullifier, true);
+    verified_count.increment(1);
+    return disclose(true);
+  }
+}
+
