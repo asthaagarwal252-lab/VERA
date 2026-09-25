@@ -8,13 +8,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings=0",
-    "test": "vitest run",
+    "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@midnight-ntwrk/dapp-connector-api": "4.0.1",
     "@midnight-ntwrk/midnight-js-dapp-connector-proof-provider": "4.1.1",
-    "framer-motion": "12.23.24",
+    "framer-motion": "12.43.0",
     "lucide-react": "0.468.0",
     "react": "19.0.0",
     "react-dom": "19.0.0"
@@ -37,4 +37,3 @@
     "vitest": "2.1.8"
   }
 }
-
