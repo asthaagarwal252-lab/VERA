@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/": {
+      "targetKind": "existing-ui",
+      "projectId": "6ad6c951-670b-4a23-a52a-1cfebb884518",
+      "activeDraftId": "4253ea61-afee-4ae8-a205-8a43b9e11cde",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "src/App.tsx",
+        "src/styles.css"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "6d644146a0558baa931073794d4d4dfa947ab9287968864666929e2279187ba9",
+        "src/App.tsx": "dba2fe328e50552f668a84a56989c3d8865ea75ff76b20508c24f39c7d6b1a08",
+        "src/styles.css": "e92b80fcc912f6a7bb73cb907a771792a4c90fe39cac6cd7697a936b0230f11e"
+      },
+      "drafts": {
+        "4253ea61-afee-4ae8-a205-8a43b9e11cde": {
+          "title": "VERA Production Proof Station",
+          "visualDirection": "student-first scientific field instrument",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-09-24T09:06:58.826Z"
+    }
+  }
+}
