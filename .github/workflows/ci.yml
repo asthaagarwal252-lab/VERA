@@ -1,0 +1,42 @@
+name: Verify VERA
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: vera-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: node scripts/validate-contract.mjs
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - uses: astral-sh/setup-uv@v5
+      - run: uv venv backend/.venv
+      - run: uv pip install --python backend/.venv/bin/python -e "backend[dev]"
+      - run: backend/.venv/bin/python -m ruff check backend api
+      - run: backend/.venv/bin/python -m pytest backend/tests
+      - run: node -e "JSON.parse(require('node:fs').readFileSync('vercel.json')); console.log('vercel.json valid')"
+  deploy-pages:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci && npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+      - uses: actions/deploy-pages@v4
