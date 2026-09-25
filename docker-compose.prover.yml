@@ -1,0 +1,10 @@
+services:
+  midnight-proof-server:
+    image: midnightntwrk/proof-server:latest
+    ports: ["6300:6300"]
+    environment:
+      RUST_LOG: info
+    volumes:
+      - ./public/artifacts:/artifacts:ro
+    command: ["--config", "/artifacts/manifest.json"]
+
