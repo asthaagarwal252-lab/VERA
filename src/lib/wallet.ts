@@ -12,7 +12,7 @@ export function preferredWallet(wallets = discoverWallets()): WalletProvider | u
 
 export async function connectWallet(network: Network): Promise<Connection> {
   const provider = preferredWallet()
-  if (!provider) throw new Error('No Midnight wallet was found. Install 1AM, then refresh this page.')
+  if (!provider) throw new Error('A 1AM wallet is not available in this browser.')
   const api = await provider.connect(network)
   const dustRaw = await (api as { getDustBalance?: () => Promise<unknown> }).getDustBalance?.()
   return { provider, api, network, dust: dustRaw === undefined ? undefined : String(dustRaw) }
@@ -22,4 +22,3 @@ export async function callEligibilityCircuit(connection: Connection, localWitnes
   if (!window.veraCompact) throw new Error('The compiled VERA browser artifacts are not installed. No transaction was submitted.')
   return window.veraCompact.proveEligibility(connection.api, { credentialCommitment: localWitness.commitment, secretNonce: localWitness.nonce, verifierScope: scope })
 }
-

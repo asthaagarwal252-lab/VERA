@@ -83,6 +83,15 @@ This repository now supports one Vercel project: Vite is served from `dist` and 
 3. Add `DATABASE_URL`, `DATABASE_DIRECT_URL`, `GEMINI_API_KEY`, and `GEMINI_MODEL` as server-side Vercel environment variables. Set `VITE_API_BASE_URL=/api` for production (or leave it unset; this is the production default).
 4. Run the Alembic migration against the Neon direct URL before production traffic, then deploy. Use `vercel dev` to emulate the combined deployment locally.
 
+Run the migration from the repository root after installing the backend dependencies. The migration runner automatically converts the async runtime URL to its synchronous migration driver and always prefers `DATABASE_DIRECT_URL`:
+
+```powershell
+$env:DATABASE_DIRECT_URL = "postgresql+asyncpg://...your-unpooled-neon-url..."
+backend/.venv/Scripts/python.exe -m alembic -c backend/alembic.ini upgrade head
+```
+
+The Vercel runtime must use the pooled `DATABASE_URL`; do not run migrations from a serverless request.
+
 Vercel’s current FastAPI guidance recognises an exported `app` in `api/index.py`, and its Python runtime documentation notes the 500 MB function-bundle ceiling; the supplied exclusions keep the function focused on runtime code. [FastAPI on Vercel](https://vercel.com/docs/frameworks/backend/fastapi), [Python runtime](https://vercel.com/docs/functions/runtimes/python).
 
 For the exact Neon branch, direct-vs-pooled connection, Vercel environment, health-check, and operational acceptance sequence, follow [the production deployment checklist](docs/PRODUCTION_DEPLOYMENT.md). VERA applies public API security headers, narrow CORS methods/headers, host allowlisting, request IDs, response compression, safe validation errors, and a per-instance request limiter. These controls complement—not replace—Vercel firewall/WAF and provider-level monitoring.
