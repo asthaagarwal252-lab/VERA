@@ -17,7 +17,7 @@ def local_plan(requirement: str) -> dict[str, object]:
     return {
         "summary": f"VERA will prove the published rule: {requirement}",
         "disclosed": ["A pass/fail eligibility outcome", "A scope-bound anti-replay marker"],
-        "private": ["Student identifier", "Date of birth", "Credential commitment", "Secret nonce"],
+        "private": ["Birth year", "Enrollment status", "Holder secret", "Credential nonce"],
         "caution": "Do not paste a credential, document, wallet address, or secret into this panel.",
-        "source": "deterministic-local-fallback",
+        "source": "local-policy-engine",
     }

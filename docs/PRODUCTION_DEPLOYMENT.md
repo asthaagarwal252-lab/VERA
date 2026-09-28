@@ -10,9 +10,9 @@
 ## Vercel
 
 1. Import the repository at its root. The project builds Vite into `dist` and detects `api/index.py` as the FastAPI function.
-2. Add the production values for `ENVIRONMENT`, `ALLOWED_HOSTS`, `CORS_ORIGINS`, `DATABASE_URL`, `DATABASE_DIRECT_URL`, `GEMINI_API_KEY`, and `GEMINI_MODEL`.
-3. Set `VITE_API_BASE_URL=/api`; use a real contract address and artifact base URL only after deploying verified Compact artifacts.
-4. Verify `GET /api/health` returns `status: ok` and `database: reachable` before exposing the app.
+2. Add the production values for `ENVIRONMENT`, `ALLOWED_HOSTS`, `CORS_ORIGINS`, `DATABASE_URL`, `GEMINI_API_KEY`, and `GEMINI_MODEL`. Keep `DATABASE_DIRECT_URL` outside the request runtime and use it only from a trusted migration environment.
+3. Set `VITE_API_BASE_URL=/api`, `VITE_PROOF_ARTIFACT_BASE_URL=/artifacts`, and the desired `VITE_DEFAULT_NETWORK`. Do not set a contract address: 1AM deploys the contract after the user connects, and the resulting address is saved per browser/network.
+4. Verify `GET /api/health` returns `status: ok` and `database: reachable-and-migrated` before exposing the app.
 
 ## Operational acceptance
 

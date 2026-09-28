@@ -1,0 +1,28 @@
+.progress-labels { grid-template-columns: repeat(5, 1fr); }
+.secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.secondary-button:disabled, .primary-mini:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+.credential-step { display: grid; gap: 10px; }
+.credential-controls { display: flex; align-items: end; gap: 16px; flex-wrap: wrap; padding: 11px; border: 1px solid #d7ddd5; border-radius: 7px; background: #f4f6f1; }
+.credential-controls label { display: grid; gap: 5px; font: 600 9px 'IBM Plex Mono', monospace; color: #52645d; letter-spacing: .04em; }
+.credential-controls input[type='number'] { width: 112px; border: 1px solid #afc2b7; border-radius: 5px; background: #fff; padding: 8px; color: #132521; font: 600 12px 'IBM Plex Mono', monospace; }
+.credential-controls .check-control { display: flex; align-items: center; gap: 7px; padding-bottom: 8px; }
+.credential-controls input[type='checkbox'] { width: 16px; height: 16px; accent-color: #0f684b; }
+.proof-choice { display: grid; gap: 7px; }
+.proof-choice label { display: grid; gap: 5px; max-width: 370px; color: #52645d; font: 600 9px 'IBM Plex Mono', monospace; letter-spacing: .08em; }
+.proof-choice select { min-height: 36px; border: 1px solid #afc2b7; border-radius: 5px; background: #fff; padding: 7px 30px 7px 9px; color: #132521; font: 600 11px 'IBM Plex Mono', monospace; }
+.proof-choice select:focus-visible { outline: 3px solid #1a6075; outline-offset: 2px; }
+.proof-choice select:disabled { opacity: .6; cursor: not-allowed; }
+.contract-address { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; margin-top: 18px; padding: 11px 12px; border: 1px solid rgba(235,247,238,.2); border-radius: 6px; }
+.contract-address span { font: 600 9px 'IBM Plex Mono', monospace; color: #8fc3aa; letter-spacing: .12em; }
+.contract-address code { overflow: hidden; text-overflow: ellipsis; color: #d8e9df; font-size: 11px; }
+input:focus-visible { outline: 3px solid #1a6075; outline-offset: 2px; }
+
+@media (max-width: 620px) {
+  .progress-labels { grid-template-columns: repeat(5, minmax(0, 1fr)); font-size: 7px; }
+  .progress-labels span { overflow: hidden; text-overflow: ellipsis; }
+  .expanded-steps li { display: grid; grid-template-columns: auto 1fr; }
+  .expanded-steps li > button { grid-column: 2; width: max-content; }
+  .credential-controls { align-items: flex-start; flex-direction: column; }
+  .contract-address { grid-template-columns: 1fr; }
+  .contract-address code { font-size: 9px; }
+}

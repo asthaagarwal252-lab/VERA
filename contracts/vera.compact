@@ -1,52 +1,78 @@
-// VERA eligibility registry — Compact source.
-// `disclose(eligible)` is intentional: a verifier needs only the yes/no outcome.
-// The DOB, student number, issuer signature, and secret nonce remain a private witness.
-pragma language_version >= 0.18;
+pragma language_version 0.23;
 
-contract VERAEligibility {
-  // Public ledger state: issuers, used nullifiers, and aggregate verification count.
-  ledger issuers: Map<Bytes<32>, Boolean>;
-  ledger used_nullifiers: Map<Bytes<32>, Boolean>;
-  ledger verified_count: Counter;
+import CompactStandardLibrary;
 
-  // Registers an authority public key. This does not contain a student credential.
-  circuit register_issuer(issuer_key: Bytes<32>): [] {
-    assert(!issuers.member(issuer_key));
-    issuers.insert(issuer_key, true);
-  }
-
-  // Private witness values are never disclosed. Only a boolean outcome is public.
-  circuit prove_eligibility(
-    private credential_commitment: Bytes<32>,
-    private issuer_key: Bytes<32>,
-    private birth_year: Uint<16>,
-    private current_year: Uint<16>,
-    private secret_nonce: Bytes<32>,
-    verifier_scope: Bytes<32>
-  ): Boolean {
-    assert(issuers.member(issuer_key));
-    assert(current_year >= birth_year + 18);
-    let nullifier = poseidon(credential_commitment, secret_nonce, verifier_scope);
-    assert(!used_nullifiers.member(nullifier));
-    used_nullifiers.insert(nullifier, true);
-    verified_count.increment(1);
-    let eligible = true;
-    return disclose(eligible);
-  }
-
-  // A separate circuit for an enrolled-only policy; same privacy-safe replay defense.
-  circuit prove_enrollment(
-    private enrollment_commitment: Bytes<32>,
-    private issuer_key: Bytes<32>,
-    private secret_nonce: Bytes<32>,
-    verifier_scope: Bytes<32>
-  ): Boolean {
-    assert(issuers.member(issuer_key));
-    let nullifier = poseidon(enrollment_commitment, secret_nonce, verifier_scope);
-    assert(!used_nullifiers.member(nullifier));
-    used_nullifiers.insert(nullifier, true);
-    verified_count.increment(1);
-    return disclose(true);
-  }
+// Every field in this record comes from the holder's local witness and is
+// never written to the public ledger.
+export struct StudentCredential {
+  issuerKey: Bytes<32>;
+  birthYear: Uint<16>;
+  currentlyEnrolled: Boolean;
+  holderSecret: Bytes<32>;
+  credentialNonce: Bytes<32>;
 }
 
+witness localCredential(): StudentCredential;
+
+// A VERA instance is deployed for one public policy.
+export ledger trustedIssuer: Bytes<32>;
+export ledger minimumAge: Uint<16>;
+export ledger policyYear: Uint<16>;
+
+// Nullifiers are scope-bound hashes. They prevent replay without publishing
+// the credential, birth year, issuer key, or holder secret.
+export ledger usedNullifiers: Set<Bytes<32>>;
+export ledger verifiedCount: Counter;
+
+constructor(issuer: Bytes<32>, ageFloor: Uint<16>, year: Uint<16>) {
+  // Constructor inputs intentionally become the deployment's public policy.
+  trustedIssuer = disclose(issuer);
+  minimumAge = disclose(ageFloor);
+  policyYear = disclose(year);
+}
+
+export circuit proveEligibility(verifierScope: Bytes<32>): Boolean {
+  const credential = localCredential();
+
+  assert(credential.issuerKey == trustedIssuer, "Credential issuer is not trusted");
+  assert(credential.currentlyEnrolled, "Credential is not currently enrolled");
+  assert(policyYear >= credential.birthYear, "Credential birth year is invalid");
+  assert(policyYear - credential.birthYear >= minimumAge, "Minimum age requirement is not met");
+
+  const nullifier = persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "vera:eligibility:v1"),
+    credential.holderSecret,
+    credential.credentialNonce,
+    verifierScope,
+  ]);
+  const publicNullifier = disclose(nullifier);
+
+  assert(!usedNullifiers.member(publicNullifier), "This credential was already used for this scope");
+  usedNullifiers.insert(publicNullifier);
+  verifiedCount.increment(1);
+
+  // Only the successful outcome is disclosed to the relying party.
+  return disclose(true);
+}
+
+export circuit proveEnrollment(verifierScope: Bytes<32>): Boolean {
+  const credential = localCredential();
+
+  assert(credential.issuerKey == trustedIssuer, "Credential issuer is not trusted");
+  assert(credential.currentlyEnrolled, "Credential is not currently enrolled");
+
+  const nullifier = persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "vera:enrollment:v1"),
+    credential.holderSecret,
+    credential.credentialNonce,
+    verifierScope,
+  ]);
+  const publicNullifier = disclose(nullifier);
+
+  assert(!usedNullifiers.member(publicNullifier), "This credential was already used for this scope");
+  usedNullifiers.insert(publicNullifier);
+  verifiedCount.increment(1);
+
+  // Enrollment success is disclosed; all credential facts remain private.
+  return disclose(true);
+}

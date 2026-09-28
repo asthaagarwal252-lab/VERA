@@ -4,8 +4,6 @@ on:
   pull_request:
 permissions:
   contents: read
-  pages: write
-  id-token: write
 concurrency:
   group: vera-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -17,7 +15,18 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: node scripts/validate-contract.mjs
+      - name: Install Compact toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/download/compact-v0.5.2/compact-installer.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/compact" update 0.31.1
+      - name: Recompile and verify committed artifacts
+        run: |
+          compact compile contracts/vera.compact contracts/managed/vera
+          git diff --exit-code -- contracts/managed/vera
+          diff -qr contracts/managed/vera/keys public/artifacts/keys
+          diff -qr contracts/managed/vera/zkir public/artifacts/zkir
+      - run: npm run contracts:validate
       - run: npm run lint
       - run: npm test
       - run: npm run build
@@ -27,16 +36,3 @@ jobs:
       - run: backend/.venv/bin/python -m ruff check backend api
       - run: backend/.venv/bin/python -m pytest backend/tests
       - run: node -e "JSON.parse(require('node:fs').readFileSync('vercel.json')); console.log('vercel.json valid')"
-  deploy-pages:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: verify
-    runs-on: ubuntu-latest
-    environment: github-pages
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
-      - run: npm ci && npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: dist }
-      - uses: actions/deploy-pages@v4

@@ -1,6 +1,5 @@
 # Contract notes
 
-`VERAEligibility` exposes only issuer membership, proof outcome, a scope-bound nullifier state, and an aggregate counter. It deliberately does **not** disclose the credential commitment, birth year, issuer signature, secret nonce, student number, or wallet identifier.
+`VERAEligibility` exposes only its public policy, proof outcome, a scope-bound nullifier set, and an aggregate counter. It deliberately does **not** disclose the birth year, enrollment flag, holder secret, credential nonce, or wallet identifier.
 
-`disclose(eligible)` is justified because the relying party must know whether access can be granted. `disclose(true)` in `prove_enrollment` likewise reveals only success, never the enrolled attribute itself. A deployment must compile this source with a toolchain version compatible with the chosen Preview/Preprod environment and commit the resulting browser artifacts under `public/artifacts/`.
-
+`disclose(true)` is justified because the relying party must know that the private checks succeeded. Constructor `disclose()` calls intentionally publish the policy parameters. The source is pinned to Compact language 0.23 and generated with toolchain 0.31.1 for the Midnight.js 4.1.x / ledger-v8 stack. Generated bindings live under `contracts/managed/vera`; browser proof material is copied to `public/artifacts/`.

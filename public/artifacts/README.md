@@ -1,4 +1,5 @@
 # Generated Compact artifacts
 
-This directory is the browser-served destination for the Compact compiler's generated ZK configuration, circuit description, and proving key materials. It contains no private witness data. Generate it with the supported Compact compiler before connecting VERA to a live contract.
+This directory contains the browser-served prover keys, verifier keys, and ZKIR generated from `contracts/vera.compact` with Compact toolchain 0.31.1.
 
+These files contain no student data or private witnesses. VERA loads them at runtime and delegates proving to the connected 1AM wallet. The contract address is not an environment variable: it is returned by Midnight after the user approves deployment and is then saved per browser/network.

@@ -18,11 +18,12 @@ def test_metrics_do_not_expose_private_records():
         assert client.get("/v1/metrics").json()["private_records_stored"] == 0
 
 
-def test_gemini_endpoint_uses_safe_fallback():
+def test_policy_endpoint_uses_safe_local_engine():
     with TestClient(app) as client:
         body = client.post("/v1/proof-plan", json={"public_requirement": "Must be actively enrolled for access."}).json()
-        assert body["source"] == "deterministic-local-fallback"
-        assert "Student identifier" in body["private"]
+        assert body["source"] == "local-policy-engine"
+        assert "Birth year" in body["private"]
+        assert "Credential nonce" in body["private"]
 
 
 def test_sensitive_policy_input_is_rejected():

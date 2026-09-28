@@ -1,101 +1,148 @@
 # VERA — Student Proof Station
 
-[![CI](https://github.com/OWNER/vera/actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+VERA lets a student prove the Campus Night Lab rule without uploading a student document or publishing the facts that satisfy it. The verifier receives a finalized eligible result, a scope-bound anti-replay nullifier, and transaction metadata—not the birth year, enrollment flag, holder secret, or credential nonce.
 
-VERA lets a student prove a campus-access rule without transmitting the source record. The MVP demonstrates a scope-bound eligibility proof for the Campus Night Lab: the verifier learns only an eligible/not-eligible outcome and a replay-safe marker.
+The interface uses a scientific-instrument design language: calibrated status panels, visible checkpoints, restrained motion, clear privacy boundaries, and responsive layouts designed around a student completing the flow for the first time.
 
-## Why Midnight
+## Live flow
 
-Campus services often ask students to upload identity documents for simple eligibility decisions. Midnight is essential here: the Compact circuit evaluates private credential facts and selectively discloses the outcome, rather than moving the credential into a conventional database.
+1. The student reviews or edits a locally stored credential.
+2. VERA explains the public policy; Gemini never receives the credential.
+3. The student connects a compatible 1AM wallet on Preview or Preprod.
+4. VERA asks 1AM to deploy a contract, or rejoins the address saved for that browser/network.
+5. The wallet provides its indexer and proving services, balances the transaction, and asks for approval.
+6. The student chooses `proveEligibility` (age + enrollment) or `proveEnrollment` (enrollment only). The selected circuit checks the private witness, consumes a scope-bound nullifier, increments the public aggregate, and discloses only success.
+7. The UI displays a receipt only after Midnight finalization.
+
+There is no demo-mode transaction and no `VITE_CONTRACT_ADDRESS`. A contract address exists only after the user approves deployment.
 
 ## Architecture
 
 ```text
-Student browser ─ local witness + generated Compact artifacts ── 1AM wallet
-      │ public policy only                                      │
-      └────────────── FastAPI / Gemini boundary ── Neon public receipts
-                                                              Midnight network
+Browser-local credential ── generated Compact contract + ZK artifacts
+          │                                  │
+          │ public policy only               └── 1AM: prove → balance → submit
+          ▼                                                   │
+FastAPI ── Gemini explanation / public receipts               ▼
+          │                                            Midnight network
+          └── Neon Postgres (public metadata only)
 ```
-
-The frontend discovers UUID-keyed providers on `window.midnight`, prefers 1AM, requests the chosen Preview or Preprod network, and resets the session when the network changes. It will not display a transaction as real until the generated contract adapter returns a finalized result.
 
 ## Privacy model
 
 | An observer can learn | An observer cannot learn |
 | --- | --- |
-| Eligibility pass/fail, public policy scope, finalized transaction ID, aggregate counts | Student number, DOB, credential, issuer signature, nonce, wallet address, private witness, document |
+| Public policy parameters, successful eligibility outcome, contract address, scope-bound nullifier, finalized transaction ID, aggregate count | Birth year, enrollment flag, holder secret, credential nonce, raw credential, document, wallet seed phrase, circuit private state |
 
-Gemini receives a redacted public requirement only. The API uses structured Pydantic output, rejects obvious sensitive fields, hashes public requirements for receipts, and falls back deterministically without an API key. Neon stores only public receipt metadata; `DATABASE_URL` is the pooled URL and `DATABASE_DIRECT_URL` is reserved for migrations.
+The Compact constructor deliberately discloses the policy issuer key, minimum age, and policy year. Each proof deliberately discloses the nullifier and successful boolean because those are required for replay prevention and access. Private facts are read through the `localCredential()` witness and are never posted to the API or database.
+
+Gemini receives only redacted public requirement text. FastAPI rejects obvious sensitive fields and uses a deterministic local fallback when no Gemini key is present. The database stores public receipt metadata only and rejects known private fields.
+
+## Technology
+
+- React 19, TypeScript, Vite, Framer Motion
+- Midnight.js 4.1.1, DApp Connector API 4.0.1, Compact 0.31.1 / language 0.23
+- Compiled Compact bindings, prover/verifier keys, and ZKIR committed in the repository
+- FastAPI, Pydantic, SQLAlchemy async, Alembic
+- Neon Postgres and the Google GenAI SDK
+- Vercel for the Vite frontend and `/api/*` FastAPI function
 
 ## Local setup
 
-Prerequisites: Node 22+, Python 3.11+, `uv`, Docker (optional), a 1AM-compatible wallet, and a supported Compact compiler for your target network.
+Prerequisites: Node.js 22+, Python 3.11+, `uv`, Chrome with 1AM, and testnet NIGHT/DUST for live transactions. Native Windows is not supported by the Compact toolchain; compile through WSL. Runtime users do not need the compiler because the generated artifacts are committed.
 
-```bash
-cp .env.example .env
+```powershell
+Copy-Item .env.example .env
 npm ci
 npm run dev
+
 uv venv backend/.venv
 uv pip install --python backend/.venv/Scripts/python.exe -e "backend[dev]"
 backend/.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend --reload
 ```
 
-On macOS/Linux use `backend/.venv/bin/python` instead. API docs appear at `http://localhost:8000/docs` in development.
+The Vite dev server proxies `/api` to `http://localhost:8000`. The FastAPI docs are at `http://localhost:8000/docs` outside production.
 
-## Midnight deployment
+## Compile the contract
 
-1. Compile `contracts/vera.compact` with the Compact compiler version supported by the selected Preview/Preprod release.
-2. Commit only generated browser artifacts needed for proving into `public/artifacts/`; never commit a witness, wallet secret, or user credential.
-3. Generate a typed browser adapter that calls `prove_eligibility` and exposes it as `window.veraCompact.proveEligibility` (the UI refuses to fabricate this call when missing).
-4. Install 1AM, select Preview or Preprod, fund DUST, then connect. Follow wallet-provided node/indexer/prover configuration.
-
-For a local proof-server topology after artifacts exist:
+The generated artifacts in this repository target the current ledger-v8 / Midnight.js 4.1.x stack.
 
 ```bash
-docker compose -f docker-compose.prover.yml up
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/midnightntwrk/compact/releases/download/compact-v0.5.2/compact-installer.sh | sh
+source ~/.local/bin/env
+compact update 0.31.1
+compact compile contracts/vera.compact contracts/managed/vera
+cp contracts/managed/vera/keys/* public/artifacts/keys/
+cp contracts/managed/vera/zkir/* public/artifacts/zkir/
 ```
+
+CI recompiles the contract and fails if the generated contract, key, or ZKIR directories differ from the committed copies.
+
+## Wallet and testnet use
+
+1. Install and enable a 1AM wallet implementing DApp Connector API v4.
+2. Select Preview or Preprod in VERA and connect.
+3. Fund the wallet with the selected network’s test NIGHT and wait for DUST.
+4. Press **Set up**. On the first run, approve the deployment transaction. Later sessions rejoin the saved address.
+5. Press **Request proof** and approve the proof transaction.
+
+VERA uses the configuration and proving provider returned by 1AM, so ordinary users do not configure indexer, RPC, proof-server, or contract-address environment variables. `docker-compose.prover.yml` is available only for developers who need a local proof-server process.
 
 ## Gemini and Neon
 
-Set `GEMINI_API_KEY` server-side only. VERA uses the official `google-genai` SDK and never forwards local witness data. Create Neon `development` and `production` branches; use pooled traffic URL in `DATABASE_URL` and direct migration URL in `DATABASE_DIRECT_URL`. Run Alembic with the direct URL injected in production.
-
-## Verification
-
-```bash
-node scripts/validate-contract.mjs
-npm run lint
-npm test
-npm run build
-backend/.venv/Scripts/python.exe -m ruff check backend
-backend/.venv/Scripts/python.exe -m pytest backend/tests
-```
-
-## Delivery
-
-CI compiles the app, validates Compact privacy markers, lints, tests, builds, and deploys `main` to GitHub Pages when repository Pages is configured. `render.yaml` remains available for a standalone FastAPI host.
-
-## Deploy both services on Vercel
-
-This repository now supports one Vercel project: Vite is served from `dist` and the FastAPI service is exposed at `/api/*` through `api/index.py`. The Python function is configured to exclude tests and local environments from its bundle.
-
-1. Push this repository to GitHub, then import it at [Vercel](https://vercel.com/new).
-2. Keep the root directory as the repository root. Vercel uses `npm run build`, publishes `dist`, and detects the Python `api/index.py` entrypoint.
-3. Add `DATABASE_URL`, `DATABASE_DIRECT_URL`, `GEMINI_API_KEY`, and `GEMINI_MODEL` as server-side Vercel environment variables. Set `VITE_API_BASE_URL=/api` for production (or leave it unset; this is the production default).
-4. Run the Alembic migration against the Neon direct URL before production traffic, then deploy. Use `vercel dev` to emulate the combined deployment locally.
-
-Run the migration from the repository root after installing the backend dependencies. The migration runner automatically converts the async runtime URL to its synchronous migration driver and always prefers `DATABASE_DIRECT_URL`:
+`GEMINI_API_KEY` is server-only. `DATABASE_URL` is the pooled Neon URL used by the Vercel function; `DATABASE_DIRECT_URL` is the direct, unpooled URL used only for Alembic migrations. Create separate Neon development and production branches.
 
 ```powershell
-$env:DATABASE_DIRECT_URL = "postgresql+asyncpg://...your-unpooled-neon-url..."
+$env:DATABASE_DIRECT_URL = "postgresql+asyncpg://...direct-neon-url..."
 backend/.venv/Scripts/python.exe -m alembic -c backend/alembic.ini upgrade head
 ```
 
-The Vercel runtime must use the pooled `DATABASE_URL`; do not run migrations from a serverless request.
+## Verification
 
-Vercel’s current FastAPI guidance recognises an exported `app` in `api/index.py`, and its Python runtime documentation notes the 500 MB function-bundle ceiling; the supplied exclusions keep the function focused on runtime code. [FastAPI on Vercel](https://vercel.com/docs/frameworks/backend/fastapi), [Python runtime](https://vercel.com/docs/functions/runtimes/python).
+```powershell
+npm run contracts:validate
+npm run lint
+npm test
+npm run build
+backend/.venv/Scripts/python.exe -m ruff check backend api
+backend/.venv/Scripts/python.exe -m pytest backend/tests
+```
 
-For the exact Neon branch, direct-vs-pooled connection, Vercel environment, health-check, and operational acceptance sequence, follow [the production deployment checklist](docs/PRODUCTION_DEPLOYMENT.md). VERA applies public API security headers, narrow CORS methods/headers, host allowlisting, request IDs, response compression, safe validation errors, and a per-instance request limiter. These controls complement—not replace—Vercel firewall/WAF and provider-level monitoring.
+## Vercel deployment
 
-Live demo: not deployed. Repository URL: not connected to a remote.
+Import the repository root into one Vercel project. The included `vercel.json` builds Vite into `dist` and routes `/api/*` to `api/index.py`.
 
-Known limitations: generated Compact artifacts, a deployed contract address, a proof server, live Preview/Preprod setup, a Neon project, and Gemini key are intentionally absent because they require external credentials and network deployment authority.
+Add these production variables:
+
+- `DATABASE_URL`
+- `GEMINI_API_KEY` (optional; deterministic fallback remains available)
+- `GEMINI_MODEL`
+- `ENVIRONMENT=production`
+- `ALLOWED_HOSTS=your-project.vercel.app`
+- `CORS_ORIGINS=https://your-project.vercel.app`
+- `VITE_API_BASE_URL=/api`
+- `VITE_PROOF_ARTIFACT_BASE_URL=/artifacts`
+- `VITE_DEFAULT_NETWORK=preview` or `preprod`
+
+Do not add a contract address. Do not expose `DATABASE_DIRECT_URL` unless you run migrations from a trusted deployment job; Vercel request handlers do not need it.
+
+See [the production checklist](docs/PRODUCTION_DEPLOYMENT.md), [architecture](docs/ARCHITECTURE.md), [privacy model](docs/PRIVACY_MODEL.md), [demo script](docs/DEMO_SCRIPT.md), and [product proposal](docs/PRODUCT_PROPOSAL.md).
+
+## Repository structure
+
+```text
+contracts/              Compact source and generated bindings/artifacts
+public/artifacts/        Browser-served prover keys and ZKIR
+src/                     React UI, local credential, 1AM/Midnight integration
+backend/                 FastAPI, SQLAlchemy, Alembic, Gemini boundary
+api/                     Vercel Python entrypoint
+docs/                    Product, privacy, architecture, and deployment docs
+.github/workflows/       Reproducible verification pipeline
+```
+
+## Current external actions
+
+The code, generated circuits, tests, and production build are local and reproducible. A real deployment still requires the repository owner to connect GitHub to Vercel, create Neon credentials, and approve wallet transactions with a funded 1AM account. Those actions cannot be safely performed from source code.
+
+Live demo: not deployed. Repository URL: no Git remote is configured.
