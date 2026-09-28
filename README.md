@@ -4,6 +4,8 @@ VERA lets a student prove the Campus Night Lab rule without uploading a student 
 
 The interface uses a scientific-instrument design language: calibrated status panels, visible checkpoints, restrained motion, clear privacy boundaries, and responsive layouts designed around a student completing the flow for the first time.
 
+**Live website:** [vera-tau-liart.vercel.app](https://vera-tau-liart.vercel.app/)
+
 ## Preview
 
 VERA's Compact contract was successfully deployed to the Midnight **Preview** network in block **1,062,902**.
@@ -14,6 +16,17 @@ VERA's Compact contract was successfully deployed to the Midnight **Preview** ne
 | Status | `SUCCESS` |
 | Contract address | [`a43ac4ca5f9c2651f06fce47e5ae767e9d95d5d403de47801718a5b5cc63338d`](https://explorer.1am.xyz/contract/a43ac4ca5f9c2651f06fce47e5ae767e9d95d5d403de47801718a5b5cc63338d?network=preview) |
 | Deployment transaction | [`746f86844c369f3372050d1eef846b353414647d3fd854b2903e8e0de39340da`](https://explorer.1am.xyz/tx/746f86844c369f3372050d1eef846b353414647d3fd854b2903e8e0de39340da?network=preview) |
+
+## Preprod
+
+VERA's Compact contract was successfully deployed to the Midnight **Preprod** network in block **2,746,503**.
+
+| Deployment field | Verified value |
+| --- | --- |
+| Network | `preprod` |
+| Status | `SUCCESS` |
+| Contract address | [`a12be319a82cdb48704d514f210b6a5ca4f8a249aa91844e66c9631f875fd898`](https://explorer.1am.xyz/contract/a12be319a82cdb48704d514f210b6a5ca4f8a249aa91844e66c9631f875fd898?network=preprod) |
+| Deployment transaction | [`17a6f1b1e65d6a7b813c1392ee2d5b62c621afdea4688ac7501750e36ab07400`](https://explorer.1am.xyz/tx/17a6f1b1e65d6a7b813c1392ee2d5b62c621afdea4688ac7501750e36ab07400?network=preprod) |
 
 ## Website Screenshots
 
@@ -178,4 +191,4 @@ docs/                    Product, privacy, architecture, and deployment docs
 
 The code, generated circuits, tests, and production build are local and reproducible. A real deployment still requires the repository owner to connect GitHub to Vercel, create Neon credentials, and approve wallet transactions with a funded 1AM account. Those actions cannot be safely performed from source code.
 
-Live demo: not currently deployed. Repository: [asthaagarwal252-lab/VERA](https://github.com/asthaagarwal252-lab/VERA).
+Live website: [vera-tau-liart.vercel.app](https://vera-tau-liart.vercel.app/). Repository: [asthaagarwal252-lab/VERA](https://github.com/asthaagarwal252-lab/VERA).
