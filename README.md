@@ -4,6 +4,37 @@ VERA lets a student prove the Campus Night Lab rule without uploading a student 
 
 The interface uses a scientific-instrument design language: calibrated status panels, visible checkpoints, restrained motion, clear privacy boundaries, and responsive layouts designed around a student completing the flow for the first time.
 
+## Preview
+
+VERA's Compact contract was successfully deployed to the Midnight **Preview** network in block **1,062,902**.
+
+| Deployment field | Verified value |
+| --- | --- |
+| Network | `preview` |
+| Status | `SUCCESS` |
+| Contract address | [`a43ac4ca5f9c2651f06fce47e5ae767e9d95d5d403de47801718a5b5cc63338d`](https://explorer.1am.xyz/contract/a43ac4ca5f9c2651f06fce47e5ae767e9d95d5d403de47801718a5b5cc63338d?network=preview) |
+| Deployment transaction | [`746f86844c369f3372050d1eef846b353414647d3fd854b2903e8e0de39340da`](https://explorer.1am.xyz/tx/746f86844c369f3372050d1eef846b353414647d3fd854b2903e8e0de39340da?network=preview) |
+
+## Website Screenshots
+
+### Desktop landing experience
+
+![VERA desktop landing page](docs/screenshots/website/vera-desktop-hero.png)
+
+### Desktop proof station
+
+![VERA desktop proof station](docs/screenshots/website/vera-desktop-proof-station.png)
+
+### Desktop receipt and student questions
+
+![VERA desktop receipt and FAQ area](docs/screenshots/website/vera-desktop-faq.png)
+
+## Mobile Responsive UI
+
+| Student-first landing page | Proof-readiness instrument | Public policy and privacy boundary |
+| --- | --- | --- |
+| <img src="docs/screenshots/mobile/vera-mobile-hero.jpg" alt="VERA mobile landing page" width="280"> | <img src="docs/screenshots/mobile/vera-mobile-proof-readiness.jpg" alt="VERA mobile proof-readiness instrument" width="280"> | <img src="docs/screenshots/mobile/vera-mobile-policy.jpg" alt="VERA mobile public policy card" width="280"> |
+
 ## Live flow
 
 1. The student reviews or edits a locally stored credential.
@@ -89,6 +120,8 @@ CI recompiles the contract and fails if the generated contract, key, or ZKIR dir
 
 VERA uses the configuration and proving provider returned by 1AM, so ordinary users do not configure indexer, RPC, proof-server, or contract-address environment variables. `docker-compose.prover.yml` is available only for developers who need a local proof-server process.
 
+> **Preview and Preprod are separate ledgers.** The verified Preview contract above cannot sync into Preprod. A Preprod wallet needs Preprod test funds/DUST and must approve a separate contract deployment; VERA stores the resulting address independently for each network.
+
 ## Gemini and Neon
 
 `GEMINI_API_KEY` is server-only. `DATABASE_URL` is the pooled Neon URL used by the Vercel function; `DATABASE_DIRECT_URL` is the direct, unpooled URL used only for Alembic migrations. Create separate Neon development and production branches.
@@ -145,4 +178,4 @@ docs/                    Product, privacy, architecture, and deployment docs
 
 The code, generated circuits, tests, and production build are local and reproducible. A real deployment still requires the repository owner to connect GitHub to Vercel, create Neon credentials, and approve wallet transactions with a funded 1AM account. Those actions cannot be safely performed from source code.
 
-Live demo: not deployed. Repository URL: no Git remote is configured.
+Live demo: not currently deployed. Repository: [asthaagarwal252-lab/VERA](https://github.com/asthaagarwal252-lab/VERA).
