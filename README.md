@@ -48,6 +48,10 @@ VERA's Compact contract was successfully deployed to the Midnight **Preprod** ne
 | --- | --- | --- |
 | <img src="docs/screenshots/mobile/vera-mobile-hero.jpg" alt="VERA mobile landing page" width="280"> | <img src="docs/screenshots/mobile/vera-mobile-proof-readiness.jpg" alt="VERA mobile proof-readiness instrument" width="280"> | <img src="docs/screenshots/mobile/vera-mobile-policy.jpg" alt="VERA mobile public policy card" width="280"> |
 
+## Demo Video URL
+
+https://drive.google.com/file/d/1ZR-a1KtlVeBE-7kW8JPKEavzf1bwWr8n/view?usp=sharing
+
 ## Live flow
 
 1. The student reviews or edits a locally stored credential.
